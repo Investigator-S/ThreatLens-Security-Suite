@@ -110,7 +110,7 @@ def display_menu(console: Console):
         box=box.ROUNDED,
         border_style="cyan",
         title="[bold cyan]SYSTEM OPERATIONS / CONTROL CONSOLE[/]",
-        title_align="center",
+        title_justify="center",
         show_header=True,
         header_style="bold cyan",
         padding=(0, 1),
