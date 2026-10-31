@@ -88,16 +88,17 @@ SAFE_DOMAINS = {
     "github.com", "githubusercontent.com",
     "stackoverflow.com",
     "mozilla.org", "mozilla.com",
-    "w3.org", "schema.org",
+    "w3.org", "schema.org", "xml.org",
     "localhost",
 }
 
 # Version string patterns to exclude
 VERSION_PATTERNS = [
-    re.compile(r'[Vv]ersion\s*[=:]\s*\d+\.\d+\.\d+\.\d+'),
+    re.compile(r'[Vv]ersion\s*[=:]\s*["\']?\d+\.\d+\.\d+\.\d+["\']?'),
     re.compile(r'[Vv]\d+\.\d+\.\d+\.\d+'),
     re.compile(r'\d+\.\d+\.\d+\.\d+[\-.](?:alpha|beta|rc|dev|SNAPSHOT|release|final)', re.IGNORECASE),
-    re.compile(r'(?:SDK|API|Build|Min|Target|Compile)\s*[=:]?\s*\d+\.\d+\.\d+\.\d+', re.IGNORECASE),
+    re.compile(r'(?:SDK|API|Build|Min|Target|Compile|Framework|Assembly|Product)\s*[=:]?\s*["\']?\d+\.\d+\.\d+\.\d+["\']?', re.IGNORECASE),
+    re.compile(r'assemblyIdentity.*version=["\']?\d+\.\d+\.\d+\.\d+["\']?', re.IGNORECASE),
 ]
 
 
@@ -314,8 +315,12 @@ class NetworkExtractor:
         ftype = finding["type"]
 
         if ftype == "IPv4":
+            val = finding["value"]
+            # Filter semantic/assembly versions misidentified as IPs (e.g. 6.0.0.0, 1.0.0.0)
+            if (val.endswith(".0.0.0") or val.endswith(".0.0")) and not finding.get("has_port"):
+                return False
             try:
-                addr = ipaddress.IPv4Address(finding["value"])
+                addr = ipaddress.IPv4Address(val)
                 # Exclude multicast, reserved
                 if addr.is_multicast or addr.is_reserved or addr.is_unspecified:
                     return False
@@ -339,13 +344,16 @@ class NetworkExtractor:
 
         # Check if this looks like a version string
         for pattern in VERSION_PATTERNS:
-            if pattern.search(context):
+            if pattern.search(context) or pattern.search(raw):
                 return False
 
         # Check for common non-malicious contexts
         benign_contexts = [
             "xmlns", "schema", "doctype", "copyright", "license",
-            "gradle", "maven", "dependency", "artifact",
+            "gradle", "maven", "dependency", "artifact", "assemblyidentity",
+            "dependentassembly", "processorarchitecture", "publickeytoken",
+            "common-controls", "windowssettings", "assembly", "manifest",
+            "microsoft corporation", "visual studio", "msvc",
         ]
         context_lower = context.lower()
         for benign in benign_contexts:

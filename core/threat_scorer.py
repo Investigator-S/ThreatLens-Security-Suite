@@ -134,10 +134,10 @@ class ThreatScorer:
 
     def calculate_exe_score(self, analysis_results):
         """
-        Calculate threat score for an EXE analysis.
+        Calculate threat score for an EXE analysis with false-positive reduction.
         
         Args:
-            analysis_results: dict with keys like 'imports', 'network', 'entropy', etc.
+            analysis_results: dict with keys like 'imports', 'network', 'entropy', 'signature', etc.
             
         Returns:
             tuple: (score, severity, breakdown_dict)
@@ -145,31 +145,59 @@ class ThreatScorer:
         self.breakdown = {}
         self.details = []
 
-        # Score suspicious imports
-        imports = analysis_results.get("suspicious_imports", [])
-        imp_score = sum(i.get("score", 0) for i in imports)
-        self.breakdown["Suspicious Imports"] = min(imp_score, self.CATEGORY_CAPS["imports"])
+        signature = analysis_results.get("signature", {})
+        is_valid_sig = signature.get("is_valid", False)
+        is_microsoft = signature.get("is_microsoft", False)
 
-        # Score network indicators
+        # 1. Score suspicious imports
+        # High-risk / direct attack capability APIs
+        high_risk_apis = {
+            "VirtualAllocEx", "WriteProcessMemory", "CreateRemoteThread",
+            "NtCreateThreadEx", "RtlCreateUserThread", "QueueUserAPC",
+            "NtQueueApcThread", "SetThreadContext", "NtUnmapViewOfSection",
+            "SetWindowsHookExA", "SetWindowsHookExW", "AdjustTokenPrivileges"
+        }
+
+        imports = analysis_results.get("suspicious_imports", [])
+        high_risk_score = 0
+        baseline_score = 0
+        for imp in imports:
+            name = imp.get("name", "")
+            score = imp.get("score", 0)
+            if name in high_risk_apis:
+                high_risk_score += score
+            else:
+                baseline_score += max(1, score // 3)
+
+        combos = analysis_results.get("import_combinations", [])
+        # If no dangerous MITRE combinations are formed, cap standard baseline imports at 5 points
+        if not combos:
+            baseline_score = min(baseline_score, 5)
+
+        total_imp_score = min(high_risk_score + baseline_score, self.CATEGORY_CAPS["imports"])
+        self.breakdown["Suspicious Imports"] = total_imp_score
+
+        # 2. Score network indicators
         network = analysis_results.get("network", [])
         net_score = sum(min(n.get("confidence", 0) // 5, 10) for n in network)
         self.breakdown["Network Indicators"] = min(net_score, self.CATEGORY_CAPS["network_indicators"])
 
-        # Score entropy
+        # 3. Score entropy & packers
         entropy = analysis_results.get("entropy", {})
         ent_score = 0
-        if entropy.get("max_entropy", 0) > 7.5:
-            ent_score = 20
-        elif entropy.get("max_entropy", 0) > 7.0:
-            ent_score = 12
-        elif entropy.get("max_entropy", 0) > 6.5:
-            ent_score = 5
+        max_ent = entropy.get("max_entropy", 0)
         packers = analysis_results.get("packers", [])
+        if max_ent > 7.5:
+            ent_score = 20
+        elif max_ent > 7.1:
+            ent_score = 12
+        elif max_ent > 6.8 and packers:
+            ent_score = 8
         if packers:
             ent_score += 10
         self.breakdown["Entropy/Packing"] = min(ent_score, self.CATEGORY_CAPS["entropy"])
 
-        # Score YARA matches
+        # 4. Score YARA matches
         yara = analysis_results.get("yara", [])
         yara_score = 0
         for match in yara:
@@ -184,17 +212,16 @@ class ThreatScorer:
                 yara_score += 3
         self.breakdown["YARA Signatures"] = min(yara_score, self.CATEGORY_CAPS["yara_matches"])
 
-        # Score suspicious strings
+        # 5. Score suspicious strings
         strings = analysis_results.get("suspicious_strings", [])
-        str_score = min(len(strings) * 2, self.CATEGORY_CAPS["strings"])
+        str_score = min(len(strings) * 3, self.CATEGORY_CAPS["strings"])
         self.breakdown["Suspicious Strings"] = str_score
 
-        # Score import combinations
-        combos = analysis_results.get("import_combinations", [])
+        # 6. Score import combinations (MITRE ATT&CK)
         combo_score = sum(c.get("score", 0) for c in combos)
         self.breakdown["Import Combos (MITRE)"] = min(combo_score, self.CATEGORY_CAPS["combinations"])
 
-        # Score Heuristics & Anti-Analysis
+        # 7. Score Heuristics & Anti-Analysis
         heuristics = analysis_results.get("heuristics", [])
         heuristics_score = 0
         for h in heuristics:
@@ -207,20 +234,39 @@ class ThreatScorer:
                 heuristics_score += 5
         self.breakdown["Anti-Analysis/Heuristics"] = min(heuristics_score, self.CATEGORY_CAPS["heuristics"])
 
-        # Score VirusTotal results
+        # 8. Score VirusTotal results
         vt = analysis_results.get("virustotal", {})
+        vt_score = 0
         if vt and vt.get("status") == "found":
             from core.virustotal import get_vt_score_contribution
             vt_score = get_vt_score_contribution(vt)
             self.breakdown["VirusTotal"] = min(vt_score, self.CATEGORY_CAPS["virustotal"])
 
-        # Score Local Intel
+        # 9. Score Local Intel
         local_intel = analysis_results.get("local_intel", [])
         if local_intel:
             intel_score = min(len(local_intel) * 20, self.CATEGORY_CAPS["local_intel"])
             self.breakdown["Local Intel Matches"] = intel_score
 
-        # Calculate total
+        # Check for confirmed critical malicious indicators
+        has_critical_indicators = (yara_score >= 12 or len(combos) > 0 or len(local_intel) > 0 or vt_score >= 15)
+
+        # Authenticode Trust Damping:
+        # Verified Microsoft Windows system binaries are trusted OS components.
+        if is_microsoft and is_valid_sig:
+            if not has_critical_indicators:
+                self.total_score = 0
+                self.breakdown = {k: 0 for k in self.breakdown}
+                severity = "CLEAN"
+                return self.total_score, severity, self.breakdown
+        elif is_valid_sig:
+            # Valid commercial signature from trusted CA
+            if not has_critical_indicators:
+                raw_score = sum(self.breakdown.values())
+                self.total_score = min(15, raw_score // 3)
+                severity = self._get_severity(self.total_score)
+                return self.total_score, severity, self.breakdown
+
         self.total_score = min(100, sum(self.breakdown.values()))
         severity = self._get_severity(self.total_score)
 

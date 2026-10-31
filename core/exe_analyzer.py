@@ -50,6 +50,7 @@ class EXEAnalyzer:
         self.results = {
             "file_type": "PE/EXE",
             "pe_info": {},
+            "signature": {},
             "sections": [],
             "suspicious_imports": [],
             "import_combinations": [],
@@ -83,12 +84,17 @@ class EXEAnalyzer:
 
         # Phase 1: PE Header Analysis
         if progress_callback:
-            progress_callback("Analyzing PE headers", 20)
+            progress_callback("Analyzing PE headers", 18)
         self._analyze_headers(pe)
+
+        # Phase 1.5: Digital Signature & Authenticode Verification
+        if progress_callback:
+            progress_callback("Verifying digital signature", 28)
+        self._analyze_signature(file_path, pe)
 
         # Phase 2: Section Analysis with Entropy
         if progress_callback:
-            progress_callback("Analyzing sections & entropy", 35)
+            progress_callback("Analyzing sections & entropy", 38)
         self._analyze_sections(pe)
 
         # Phase 3: Import Analysis
@@ -278,6 +284,53 @@ class EXEAnalyzer:
 
         self.results["import_combinations"] = combinations
 
+    def _analyze_signature(self, file_path, pe):
+        """Analyze Authenticode digital signatures for authenticity."""
+        import sys
+        sig_info = {
+            "has_signature": False,
+            "status": "UNSIGNED",
+            "signer": "Unknown / Unsigned",
+            "is_microsoft": False,
+            "is_valid": False,
+        }
+
+        # Check embedded security directory in PE
+        try:
+            import pefile
+            sec_dir = pe.OPTIONAL_HEADER.DATA_DIRECTORY[pefile.DIRECTORY_ENTRY["IMAGE_DIRECTORY_ENTRY_SECURITY"]]
+            if sec_dir.VirtualAddress > 0 and sec_dir.Size > 0:
+                sig_info["has_signature"] = True
+                sig_info["status"] = "EMBEDDED_PRESENT"
+        except Exception:
+            pass
+
+        # If on Windows, query Authenticode trust (handles both embedded & catalog-signed Windows inbox files)
+        if sys.platform == "win32":
+            try:
+                import subprocess
+                ps_script = (
+                    f"$s = Get-AuthenticodeSignature '{file_path}'; "
+                    "$status = $s.Status.ToString(); "
+                    "$sub = if ($s.SignerCertificate) { $s.SignerCertificate.Subject } else { '' }; "
+                    "Write-Output \"$status|$sub\""
+                )
+                cmd = ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", ps_script]
+                p = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+                out = p.stdout.strip()
+                if "|" in out:
+                    status, subject = out.split("|", 1)
+                    sig_info["status"] = status
+                    sig_info["signer"] = subject if subject else "Unsigned"
+                    sig_info["has_signature"] = (status != "NotSigned")
+                    sig_info["is_valid"] = (status == "Valid")
+                    if "Microsoft" in subject:
+                        sig_info["is_microsoft"] = True
+            except Exception:
+                pass
+
+        self.results["signature"] = sig_info
+
     def _extract_network_indicators(self, file_path):
         """Extract IPs, ports, URLs, and domains from the binary."""
         try:
@@ -290,7 +343,7 @@ class EXEAnalyzer:
             self.results["errors"].append(f"Network extraction error: {e}")
 
     def _analyze_strings(self, file_path):
-        """Extract and categorize suspicious strings."""
+        """Extract and categorize genuine high-risk suspicious strings."""
         try:
             with open(file_path, "rb") as f:
                 data = f.read()
@@ -298,34 +351,33 @@ class EXEAnalyzer:
             all_strings = extract_strings(data, min_length=6)
             suspicious = []
 
+            # Exclude strings that are simply known API imports from this binary
+            found_import_names = {i["name"].lower() for i in self.results.get("suspicious_imports", [])}
+
             suspicious_patterns = {
-                "Registry Key": ["HKEY_", "HKLM\\", "HKCU\\", "CurrentVersion\\Run",
-                                 "CurrentVersion\\Explorer"],
-                "Command Execution": ["cmd.exe", "powershell", "/bin/sh", "/bin/bash",
-                                       "WScript.Shell", "schtasks", "net user", "wmic"],
-                "Network Keyword": ["socket", "connect", "send", "recv", "http://",
-                                     "https://", "ftp://", "upload", "download", "beacon"],
-                "Anti-Analysis": ["IsDebuggerPresent", "vmware", "virtualbox", "sandbox",
-                                   "wireshark", "fiddler", "ollydbg", "ida"],
-                "Crypto/Ransom": ["encrypt", "decrypt", "bitcoin", "wallet", "ransom",
-                                   "AES", "RSA", "CryptEncrypt"],
-                "Credential": ["password", "credential", "Login Data", "cookies.sqlite",
-                                "logins.json", "Chrome", "Firefox"],
-                "Persistence": ["\\Run\\", "\\RunOnce\\", "Startup", "schtasks",
-                                 "CreateService", "\\services\\"],
-                "Mutex": ["Mutex", "CreateMutex", "OpenMutex"],
+                "Persistence Registry": ["CurrentVersion\\Run", "CurrentVersion\\RunOnce", "CurrentVersion\\Explorer\\Shell Folders"],
+                "Command Execution": ["cmd.exe /c", "powershell -enc", "powershell -ExecutionPolicy", "wscript.shell", "vssadmin delete shadows", "schtasks /create", "net user /add"],
+                "Anti-Analysis": ["wireshark", "fiddler", "ollydbg", "x64dbg", "immunitydebugger"],
+                "Crypto/Ransom": ["bitcoin", "wallet.dat", "your files have been encrypted", "decrypt your files", "ransomware"],
+                "Credential Theft": ["Login Data", "cookies.sqlite", "logins.json", "\\Microsoft\\Vault", "lsass.exe", "samlib.dll"],
+                "C2 Protocol/Tooling": ["beacon.dll", "meterpreter", "cobaltstrike", "mimikatz", "c2_server", "revshell"],
             }
 
             seen = set()
             for s in all_strings:
-                value = s["value"]
-                if value in seen:
+                value = s["value"].strip()
+                val_lower = value.lower()
+                if val_lower in seen:
+                    continue
+
+                # Ignore strings that are simply the names of imported functions
+                if val_lower in found_import_names:
                     continue
 
                 for category, keywords in suspicious_patterns.items():
                     for keyword in keywords:
-                        if keyword.lower() in value.lower() and value not in seen:
-                            seen.add(value)
+                        if keyword.lower() in val_lower and val_lower not in seen:
+                            seen.add(val_lower)
                             suspicious.append({
                                 "value": value[:100],
                                 "category": category,
@@ -334,7 +386,7 @@ class EXEAnalyzer:
                             })
                             break
 
-            self.results["suspicious_strings"] = suspicious[:100]
+            self.results["suspicious_strings"] = suspicious[:50]
         except Exception as e:
             self.results["errors"].append(f"String analysis error: {e}")
 

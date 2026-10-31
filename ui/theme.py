@@ -89,46 +89,46 @@ STYLES = {
 
 
 # ============================================================================
-# ICONS AND SYMBOLS
+# ICONS AND SYMBOLS (Professional Cyber Terminal Indicators, Zero Emojis)
 # ============================================================================
 
 ICONS = {
-    # Status icons
-    "check": "v",
-    "cross": "x",
-    "warning": "!",
-    "info": "i",
+    # Status indicators
+    "check": "[OK]",
+    "cross": "[X]",
+    "warning": "[!]",
+    "info": "[i]",
     "bullet": "*",
     "arrow": "->",
-    "arrow_right": ">",
-    "star": "*",
+    "arrow_right": ">>",
+    "star": "[*]",
 
-    # Category icons
-    "shield": "[SHIELD]",
+    # Functional category badges
+    "shield": "[SEC]",
     "lock": "[LOCK]",
-    "unlock": "[UNLOCK]",
-    "key": "[KEY]",
-    "fire": "[FIRE]",
-    "skull": "[SKULL]",
-    "bug": "[BUG]",
-    "eye": "[EYE]",
+    "unlock": "[OPEN]",
+    "key": "[CERT]",
+    "fire": "[CRIT]",
+    "skull": "[MALWARE]",
+    "bug": "[EXPLOIT]",
+    "eye": "[SURVEIL]",
     "target": "[TARGET]",
-    "globe": "[NET]",
+    "globe": "[NETWORK]",
     "folder": "[DIR]",
     "file": "[FILE]",
     "phone": "[APK]",
-    "computer": "[EXE]",
-    "network": "[NET]",
+    "computer": "[PE/EXE]",
+    "network": "[NET-IOC]",
     "alert": "[ALERT]",
     "scan": "[SCAN]",
     "report": "[REPORT]",
-    "settings": "[SETTINGS]",
-    "exit": "[EXIT]",
+    "settings": "[CONFIG]",
+    "exit": "[QUIT]",
     "clock": "[TIME]",
-    "package": "[PKG]",
-    "chart": "[CHART]",
-    "link": "[LINK]",
-    "fingerprint": "[FINGERPRINT]",
+    "package": "[PACKAGE]",
+    "chart": "[METRICS]",
+    "link": "[IOC-URL]",
+    "fingerprint": "[HASH]",
 }
 
 

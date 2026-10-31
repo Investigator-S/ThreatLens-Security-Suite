@@ -15,6 +15,17 @@ import argparse
 import time
 from pathlib import Path
 
+# Configure UTF-8 encoding and Windows terminal ANSI escape mode
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+    except Exception:
+        pass
+
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -184,10 +195,10 @@ def interactive_analyze(expected_type=None):
         console.print(f"  [cyan]{ICONS['folder']} Directory detected. Switching to batch scan...[/]")
         run_batch_scan(file_path, "both")
     else:
-        run_analysis(file_path, "both")
+        run_analysis(file_path, "both", is_interactive=True)
 
 
-def run_analysis(file_path, output_format="both"):
+def run_analysis(file_path, output_format="both", is_interactive=False):
     """Run complete analysis on a single file."""
     console.print()
 
@@ -197,7 +208,8 @@ def run_analysis(file_path, output_format="both"):
     except ValidationError as e:
         console.print(f"  [bold red]{ICONS['cross']} Validation Error:[/] {e}")
         console.print()
-        console.input("  [dim]Press Enter to continue...[/]")
+        if is_interactive:
+            console.input("  [dim]Press Enter to continue...[/]")
         return
 
     file_type = validation["type_info"]["type"]
@@ -221,7 +233,8 @@ def run_analysis(file_path, output_format="both"):
             results = analyzer.analyze(file_path_obj, progress_callback=update_status)
         else:
             console.print(f"  [bold red]{ICONS['cross']} Unsupported file type: {file_type}[/]")
-            console.input("  [dim]Press Enter to continue...[/]")
+            if is_interactive:
+                console.input("  [dim]Press Enter to continue...[/]")
             return
 
         # Local Intel Check
@@ -275,7 +288,8 @@ def run_analysis(file_path, output_format="both"):
         console.print(f"  [yellow][!] Could not save report: {e}[/]")
 
     console.print()
-    console.input("  [dim]Press Enter to continue...[/]")
+    if is_interactive:
+        console.input("  [dim]Press Enter to continue...[/]")
 
 
 def _display_analysis_results(results, file_type):
@@ -349,6 +363,17 @@ def _display_analysis_results(results, file_type):
             ]
             for label, value in display_items:
                 console.print(f"    [dim]{label}:[/] {value}")
+
+        # Digital Signature & Authenticode Verification
+        sig = results.get("signature", {})
+        if sig:
+            display_section_header(console, "AUTHENTICODE DIGITAL SIGNATURE", ICONS["key"])
+            status_style = "bold green" if sig.get("is_valid") else "bold yellow" if sig.get("has_signature") else "dim white"
+            console.print(f"    [dim]Signature Status:[/] [{status_style}]{sig.get('status', 'UNSIGNED')}[/]")
+            if sig.get("signer"):
+                console.print(f"    [dim]Certificate Subject:[/] [white]{sig.get('signer')}[/]")
+            if sig.get("is_microsoft") and sig.get("is_valid"):
+                console.print(f"    [dim]Trust Verdict:[/] [bold green][VERIFIED MICROSOFT WINDOWS SYSTEM BINARY][/]")
 
         # Sections table
         sections = results.get("sections", [])
@@ -512,45 +537,93 @@ def interactive_batch_scan():
 
 
 def view_reports():
-    """View previously generated reports."""
+    """View previously generated reports with interactive report inspector."""
     console.print()
-    display_section_header(console, "PREVIOUS REPORTS", ICONS["report"])
+    display_section_header(console, "HISTORICAL THREAT INTELLIGENCE REPORTS", ICONS["report"])
 
     reports_dir = get_reports_dir()
     reports = sorted(reports_dir.glob("threatlens_*.json"), reverse=True)
 
     if not reports:
-        console.print(f"    [dim]No reports found in {reports_dir}[/]")
-        console.input("\n  [dim]Press Enter to continue...[/]")
+        console.print(f"    [dim]No historical reports found in {reports_dir}[/]")
+        console.input("\n  [dim]Press Enter to return to menu...[/]")
         return
 
-    for i, report in enumerate(reports[:20], 1):
+    report_table = Table(box=box.ROUNDED, border_style="cyan", show_header=True, padding=(0, 1))
+    report_table.add_column("Index", style="bold cyan", width=7, justify="center")
+    report_table.add_column("Report Timestamp / Identifier", style="bold white", min_width=32)
+    report_table.add_column("Payload Size", style="dim white", width=14, justify="right")
+
+    for i, report in enumerate(reports[:15], 1):
         size = get_file_size_str(report.stat().st_size)
         name = report.stem.replace("threatlens_", "")
-        console.print(f"    [cyan][{i:2d}][/] {name} [dim]({size})[/]")
+        report_table.add_row(f"[ {i} ]", name, size)
 
-    console.print(f"\n    [dim]Reports directory: {reports_dir}[/]")
-    console.input("\n  [dim]Press Enter to continue...[/]")
+    console.print(report_table)
+    console.print(f"  [dim]Reports Repository: {reports_dir}[/]")
+    console.print()
+
+    choice = console.input("  [cyan]Enter report number to inspect (or press Enter to return): [/]").strip()
+    if choice.isdigit() and 1 <= int(choice) <= min(15, len(reports)):
+        selected_report = reports[int(choice) - 1]
+        try:
+            import json
+            with open(selected_report, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            assessment = data.get("threat_assessment", {})
+            file_meta = data.get("file_info", {})
+
+            console.print()
+            display_scan_header(console, file_meta, file_meta.get("file_type", "UNKNOWN"))
+            display_threat_score(console, assessment.get("score", 0), assessment.get("breakdown", {}))
+        except Exception as e:
+            console.print(f"  [bold red]{ICONS['cross']} Error reading report: {e}[/]")
+
+        console.input("\n  [dim]Press Enter to return to menu...[/]")
 
 
 def show_settings():
-    """Display settings and system information."""
+    """Display settings and system diagnostic information."""
     console.print()
-    display_section_header(console, "SETTINGS & SYSTEM INFO", ICONS["settings"])
+    display_section_header(console, "SYSTEM DIAGNOSTICS & THREAT VAULT", ICONS["settings"])
 
     # Python info
     py_info = get_python_info()
-    console.print(f"\n    [bold cyan]Python Runtime[/]")
+    console.print(f"\n    [bold cyan]Python Execution Runtime[/]")
     for key, value in py_info.items():
-        console.print(f"    [dim]{key.replace('_', ' ').title()}:[/] {value}")
+        console.print(f"    [dim]{key.replace('_', ' ').title():<22}:[/] {value}")
 
     # Dependencies
-    console.print(f"\n    [bold cyan]Dependencies[/]")
+    console.print(f"\n    [bold cyan]Static Disassembly & Analysis Dependencies[/]")
     deps = check_dependencies()
     for pkg, info in deps.items():
-        status = f"[bold green]{ICONS['check']} Installed[/]" if info["installed"] else f"[bold red]{ICONS['cross']} Missing[/]"
+        status = f"[bold green]{ICONS['check']} Available[/]" if info["installed"] else f"[bold red]{ICONS['cross']} Missing[/]"
         req = "[red](required)[/]" if info["required"] else "[dim](optional)[/]"
-        console.print(f"    {status}  {pkg:15s} {req} — {info['purpose']}")
+        console.print(f"    {status}  {pkg:15s} {req} - {info['purpose']}")
+
+    # Threat Intelligence Integrations
+    console.print(f"\n    [bold cyan]Intelligence Engine Feeds[/]")
+    from core.virustotal import load_api_key
+    vt_key = load_api_key()
+    if vt_key:
+        masked = vt_key[:4] + "*" * max(0, len(vt_key) - 8) + vt_key[-4:] if len(vt_key) > 8 else "***"
+        console.print(f"    [bold green]{ICONS['check']} VirusTotal v3 API:[/] Active (Token: {masked})")
+    else:
+        console.print(f"    [yellow]{ICONS['warning']} VirusTotal v3 API:[/] Offline / Not Configured (Local Intelligence Active)")
+
+    # Local Learning Vault Status
+    console.print(f"\n    [bold cyan]Autonomous Local Threat Vault Status[/]")
+    intel_data = learning_engine.intel
+    h_count = len(intel_data.get("malicious_hashes", []))
+    u_count = len(intel_data.get("malicious_urls", []))
+    d_count = len(intel_data.get("malicious_domains", []))
+    i_count = len(intel_data.get("malicious_ips", []))
+    console.print(f"    [dim]Indexed Hashes:[/] [bold cyan]{h_count}[/]  |  "
+                  f"[dim]C2 URLs:[/] [bold cyan]{u_count}[/]  |  "
+                  f"[dim]Domains:[/] [bold cyan]{d_count}[/]  |  "
+                  f"[dim]IP IOCs:[/] [bold cyan]{i_count}[/]")
+    console.print(f"    [dim]Vault Path:[/] {learning_engine.db_path}")
 
     # Missing required dependencies warning
     missing_required = [pkg for pkg, info in deps.items() if info["required"] and not info["installed"]]

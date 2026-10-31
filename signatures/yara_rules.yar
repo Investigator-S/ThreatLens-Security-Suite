@@ -41,24 +41,23 @@ rule Generic_AntiAnalysis
         category = "evasion"
 
     strings:
-        $aa1 = "IsDebuggerPresent" ascii wide
-        $aa2 = "CheckRemoteDebuggerPresent" ascii wide
-        $aa3 = "NtQueryInformationProcess" ascii wide
-        $aa4 = "OutputDebugString" ascii wide
-        $aa5 = "SbieDll.dll" ascii wide  // Sandboxie
-        $aa6 = "dbghelp.dll" ascii wide
-        $aa7 = "vmware" ascii wide nocase
-        $aa8 = "virtualbox" ascii wide nocase
-        $aa9 = "vbox" ascii wide nocase
-        $aa10 = "qemu" ascii wide nocase
-        $aa11 = "sandbox" ascii wide nocase
-        $aa12 = "wireshark" ascii wide nocase
-        $aa13 = "fiddler" ascii wide nocase
-        $aa14 = "procmon" ascii wide nocase
-        $aa15 = "ollydbg" ascii wide nocase
+        $s1 = "SbieDll.dll" ascii wide  // Sandboxie
+        $s2 = "vmware" ascii wide nocase
+        $s3 = "virtualbox" ascii wide nocase
+        $s4 = "vbox" ascii wide nocase
+        $s5 = "qemu" ascii wide nocase
+        $s6 = "wireshark" ascii wide nocase
+        $s7 = "fiddler" ascii wide nocase
+        $s8 = "procmon" ascii wide nocase
+        $s9 = "ollydbg" ascii wide nocase
+        $s10 = "x64dbg" ascii wide nocase
+
+        $d1 = "IsDebuggerPresent" ascii wide
+        $d2 = "CheckRemoteDebuggerPresent" ascii wide
+        $d3 = "NtQueryInformationProcess" ascii wide
 
     condition:
-        3 of them
+        2 of ($s*) or (1 of ($s*) and 1 of ($d*))
 }
 
 rule Generic_Obfuscation
@@ -264,19 +263,23 @@ rule Keylogger_Generic
         category = "keylogger"
 
     strings:
-        $k1 = "keylog" ascii wide nocase
-        $k2 = "GetAsyncKeyState" ascii wide
-        $k3 = "SetWindowsHookEx" ascii wide
-        $k4 = "GetKeyboardState" ascii wide
-        $k5 = "MapVirtualKey" ascii wide
-        $k6 = "[ENTER]" ascii wide
-        $k7 = "[BACKSPACE]" ascii wide
-        $k8 = "[TAB]" ascii wide
-        $k9 = "[SHIFT]" ascii wide
-        $k10 = "keyboard" ascii wide nocase
+        $tag1 = "[ENTER]" ascii wide
+        $tag2 = "[BACKSPACE]" ascii wide
+        $tag3 = "[TAB]" ascii wide
+        $tag4 = "[SHIFT]" ascii wide
+        $tag5 = "[ESC]" ascii wide
+        $tag6 = "[CTRL]" ascii wide
+
+        $file1 = "keylog" ascii wide nocase
+        $file2 = "keystroke" ascii wide nocase
+        $file3 = "keys.log" ascii wide nocase
+
+        $api1 = "GetAsyncKeyState" ascii wide
+        $api2 = "SetWindowsHookEx" ascii wide
+        $api3 = "GetKeyboardState" ascii wide
 
     condition:
-        ($k2 or $k3) and 2 of ($k*)
+        ($api1 or $api2 or $api3) and (2 of ($tag*) or 1 of ($file*))
 }
 
 // ============================================================================
