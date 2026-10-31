@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="arch-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070a14" />
+      <stop offset="100%" stop-color="#0e172a" />
+    </linearGradient>
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#141f36" />
+      <stop offset="100%" stop-color="#0f1728" />
+    </linearGradient>
+    <linearGradient id="cyan-border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d4ff" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="accent-red" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff1744" />
+      <stop offset="100%" stop-color="#b91c1c" />
+    </linearGradient>
+    <linearGradient id="accent-green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <filter id="card-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&amp;display=swap');
+      text {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Segoe UI', monospace;
+      }
+      .head-title { font-size: 16px; font-weight: 700; fill: #ffffff; letter-spacing: 0.5px; }
+      .card-title { font-size: 12px; font-weight: 700; fill: #00d4ff; letter-spacing: 0.5px; }
+      .card-body { font-size: 10px; fill: #94a3b8; line-height: 1.4; }
+      .card-body-strong { font-size: 10px; fill: #e2e8f0; font-weight: 600; }
+      .badge-text { font-size: 9px; font-weight: 700; }
+
+      /* Flow animation */
+      @keyframes pulseFlow {
+        0% { stroke-dashoffset: 40; }
+        100% { stroke-dashoffset: 0; }
+      }
+      @keyframes glowPulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+
+      .flow-line {
+        stroke: #00d4ff;
+        stroke-width: 2;
+        stroke-dasharray: 6 4;
+        animation: pulseFlow 1.8s linear infinite;
+      }
+      .flow-line-red {
+        stroke: #ff1744;
+        stroke-width: 2;
+        stroke-dasharray: 6 4;
+        animation: pulseFlow 1.8s linear infinite;
+      }
+      .flow-line-green {
+        stroke: #10b981;
+        stroke-width: 2;
+        stroke-dasharray: 6 4;
+        animation: pulseFlow 1.8s linear infinite;
+      }
+      .node-glow {
+        animation: glowPulse 3s ease-in-out infinite;
+      }
+    </style>
+  </defs>
+
+  <!-- Background Base -->
+  <rect x="0" y="0" width="960" height="480" rx="14" fill="url(#arch-bg)" stroke="#1e293b" stroke-width="2" />
+
+  <!-- Grid Pattern Overlay -->
+  <g opacity="0.06">
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#00d4ff" stroke-width="1" />
+    </pattern>
+    <rect width="960" height="480" fill="url(#grid)" />
+  </g>
+
+  <!-- Header Banner -->
+  <g transform="translate(40, 36)">
+    <rect x="0" y="0" width="130" height="22" rx="4" fill="#00d4ff15" stroke="#00d4ff50" stroke-width="1" />
+    <text x="65" y="15" text-anchor="middle" font-size="10" fill="#00d4ff" font-weight="700">DATAFLOW PIPELINE</text>
+    <text x="145" y="16" class="head-title">ThreatLens Static Analysis &amp; Autonomous Intelligence Engine</text>
+  </g>
+
+  <!-- Flow Connectors Behind Nodes -->
+  <!-- Col 1 to Col 2 -->
+  <path d="M 200 160 L 260 160" class="flow-line" />
+  <path d="M 200 320 L 230 320 L 230 200 L 260 200" class="flow-line" />
+  <!-- Col 2 to Col 3 -->
+  <path d="M 440 180 L 500 180" class="flow-line" />
+  <path d="M 440 320 L 500 320" class="flow-line-red" />
+  <!-- Col 3 to Col 4 -->
+  <path d="M 680 180 L 710 180 L 710 230 L 740 230" class="flow-line-green" />
+  <path d="M 680 320 L 710 320 L 710 270 L 740 270" class="flow-line" />
+
+  <!-- ==================== COLUMN 1: ARTIFACT INGESTION ==================== -->
+  <!-- Card 1A: Android APK Input -->
+  <g transform="translate(40, 95)" filter="url(#card-shadow)">
+    <rect x="0" y="0" width="160" height="130" rx="8" fill="url(#card-grad)" stroke="#1e3a5f" stroke-width="1.5" />
+    <rect x="12" y="12" width="46" height="16" rx="3" fill="#10b98120" stroke="#10b981" stroke-width="1" />
+    <text x="35" y="24" text-anchor="middle" fill="#10b981" class="badge-text">STAGE 1</text>
+    <text x="12" y="46" class="card-title">APK INGESTION</text>
+    <text x="12" y="68" class="card-body-strong">Android Package</text>
+    <text x="12" y="84" class="card-body">DEX Bytecode</text>
+    <text x="12" y="98" class="card-body">AndroidManifest.xml</text>
+    <text x="12" y="112" class="card-body">Native .so ELF Libs</text>
+  </g>
+
+  <!-- Card 1B: PE/EXE Input -->
+  <g transform="translate(40, 255)" filter="url(#card-shadow)">
+    <rect x="0" y="0" width="160" height="130" rx="8" fill="url(#card-grad)" stroke="#1e3a5f" stroke-width="1.5" />
+    <rect x="12" y="12" width="46" height="16" rx="3" fill="#00d4ff20" stroke="#00d4ff" stroke-width="1" />
+    <text x="35" y="24" text-anchor="middle" fill="#00d4ff" class="badge-text">STAGE 1</text>
+    <text x="12" y="46" class="card-title">PE/EXE INGESTION</text>
+    <text x="12" y="68" class="card-body-strong">Windows Binary</text>
+    <text x="12" y="84" class="card-body">PE Headers &amp; ASLR</text>
+    <text x="12" y="98" class="card-body">Import Tables (IAT)</text>
+    <text x="12" y="112" class="card-body">Sections &amp; Entropy</text>
+  </g>
+
+  <!-- ==================== COLUMN 2: STATIC PARSING & DISASSEMBLY ==================== -->
+  <!-- Card 2A: Static Engine -->
+  <g transform="translate(260, 95)" filter="url(#card-shadow)">
+    <rect x="0" y="0" width="180" height="130" rx="8" fill="url(#card-grad)" stroke="#00d4ff80" stroke-width="1.5" />
+    <rect x="12" y="12" width="46" height="16" rx="3" fill="#00d4ff20" stroke="#00d4ff" stroke-width="1" />
+    <text x="35" y="24" text-anchor="middle" fill="#00d4ff" class="badge-text">STAGE 2</text>
+    <text x="12" y="46" class="card-title">STATIC DISASSEMBLY</text>
+    <text x="12" y="68" class="card-body-strong">Permission Audit (24+)</text>
+    <text x="12" y="84" class="card-body">Dangerous Combos (7+)</text>
+    <text x="12" y="98" class="card-body">Win32 API Risk Scorer</text>
+    <text x="12" y="112" class="card-body">Shannon Entropy Calc</text>
+  </g>
+
+  <!-- Card 2B: Deep Heuristics & Evasion -->
+  <g transform="translate(260, 255)" filter="url(#card-shadow)">
+    <rect x="0" y="0" width="180" height="130" rx="8" fill="url(#card-grad)" stroke="#ff174480" stroke-width="1.5" />
+    <rect x="12" y="12" width="46" height="16" rx="3" fill="#ff174420" stroke="#ff1744" stroke-width="1" />
+    <text x="35" y="24" text-anchor="middle" fill="#ff1744" class="badge-text">STAGE 2</text>
+    <text x="12" y="46" class="card-title" fill="#ff1744">DEEP HEURISTICS</text>
+    <text x="12" y="68" class="card-body-strong">Anti-VM (QEMU/VBox)</text>
+    <text x="12" y="84" class="card-body">Anti-Debug &amp; Tracing</text>
+    <text x="12" y="98" class="card-body">Root &amp; Frida Hooking</text>
+    <text x="12" y="112" class="card-body">Packer/UPX Detection</text>
+  </g>
+
+  <!-- ==================== COLUMN 3: ZERO-FP NETWORK & INTEL VAULT ==================== -->
+  <!-- Card 3A: Zero-FP Network Extraction -->
+  <g transform="translate(500, 95)" filter="url(#card-shadow)">
+    <rect x="0" y="0" width="180" height="130" rx="8" fill="url(#card-grad)" stroke="#10b98180" stroke-width="1.5" />
+    <rect x="12" y="12" width="46" height="16" rx="3" fill="#10b98120" stroke="#10b981" stroke-width="1" />
+    <text x="35" y="24" text-anchor="middle" fill="#10b981" class="badge-text">STAGE 3</text>
+    <text x="12" y="46" class="card-title" fill="#10b981">ZERO-FP NETWORK</text>
+    <text x="12" y="68" class="card-body-strong">5-Stage Validation</text>
+    <text x="12" y="84" class="card-body">C2 IP/Port Correlation</text>
+    <text x="12" y="98" class="card-body">Base64/Payload Decoding</text>
+    <text x="12" y="112" class="card-body">Schema &amp; TLD Filtering</text>
+  </g>
+
+  <!-- Card 3B: Dual Intelligence Core -->
+  <g transform="translate(500, 255)" filter="url(#card-shadow)">
+    <rect x="0" y="0" width="180" height="130" rx="8" fill="url(#card-grad)" stroke="#f59e0b80" stroke-width="1.5" />
+    <rect x="12" y="12" width="46" height="16" rx="3" fill="#f59e0b20" stroke="#f59e0b" stroke-width="1" />
+    <text x="35" y="24" text-anchor="middle" fill="#f59e0b" class="badge-text">STAGE 3</text>
+    <text x="12" y="46" class="card-title" fill="#f59e0b">INTELLIGENCE VAULT</text>
+    <text x="12" y="68" class="card-body-strong">Autonomous Learning</text>
+    <text x="12" y="84" class="card-body">Offline IOC Cache</text>
+    <text x="12" y="98" class="card-body">Custom DB Import</text>
+    <text x="12" y="112" class="card-body">VirusTotal API v3 Sync</text>
+  </g>
+
+  <!-- ==================== COLUMN 4: SCORING & OUTPUTS ==================== -->
+  <!-- Card 4: Threat Matrix & Reporting -->
+  <g transform="translate(740, 160)" filter="url(#card-shadow)">
+    <rect x="0" y="0" width="180" height="160" rx="8" fill="url(#card-grad)" stroke="#00d4ff" stroke-width="1.8" />
+    <rect x="12" y="12" width="46" height="16" rx="3" fill="#00d4ff20" stroke="#00d4ff" stroke-width="1" />
+    <text x="35" y="24" text-anchor="middle" fill="#00d4ff" class="badge-text">OUTPUT</text>
+    <text x="12" y="46" class="card-title">THREAT VERDICT</text>
+    <text x="12" y="68" class="card-body-strong">0-100 Weighted Score</text>
+    <text x="12" y="84" class="card-body">MITRE ATT&amp;CK Matrix</text>
+    <text x="12" y="98" class="card-body">Categorical Breakdown</text>
+    <text x="12" y="116" class="card-body-strong" fill="#00d4ff">Forensic Artifacts:</text>
+    <text x="12" y="132" class="card-body">* Rich Cyber Terminal UI</text>
+    <text x="12" y="146" class="card-body">* Structured JSON Report</text>
+  </g>
+
+  <!-- Bottom Legend Footer -->
+  <g transform="translate(40, 435)">
+    <circle cx="6" cy="6" r="4" fill="#00d4ff" />
+    <text x="18" y="9" font-size="10" fill="#64748b">Static Analysis</text>
+
+    <circle cx="150" cy="6" r="4" fill="#ff1744" />
+    <text x="162" y="9" font-size="10" fill="#64748b">Evasion &amp; Heuristics</text>
+
+    <circle cx="310" cy="6" r="4" fill="#10b981" />
+    <text x="322" y="9" font-size="10" fill="#64748b">Zero-FP Network Intel</text>
+
+    <circle cx="480" cy="6" r="4" fill="#f59e0b" />
+    <text x="492" y="9" font-size="10" fill="#64748b">Autonomous Learning Core</text>
+
+    <text x="880" y="9" text-anchor="end" font-size="10" fill="#475569">THREATLENS ARCHITECTURE v1.0.0</text>
+  </g>
+</svg>

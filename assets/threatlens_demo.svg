@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 560" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070a12" />
+      <stop offset="100%" stop-color="#0d1527" />
+    </linearGradient>
+    <linearGradient id="titlebar-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#141c2e" />
+      <stop offset="100%" stop-color="#19243b" />
+    </linearGradient>
+    <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d4ff" />
+      <stop offset="100%" stop-color="#0066ff" />
+    </linearGradient>
+    <linearGradient id="meter-fill" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff9100" />
+      <stop offset="70%" stop-color="#ff1744" />
+      <stop offset="100%" stop-color="#d50000" />
+    </linearGradient>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&amp;display=swap');
+      text {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+      }
+      .t-dim { fill: #4a5d78; }
+      .t-white { fill: #e2e8f0; }
+      .t-cyan { fill: #00d4ff; font-weight: 600; }
+      .t-green { fill: #10b981; font-weight: 600; }
+      .t-red { fill: #ff1744; font-weight: 700; }
+      .t-orange { fill: #ff9100; font-weight: 600; }
+      .t-yellow { fill: #facc15; }
+      .t-purple { fill: #a78bfa; }
+
+      /* Animation keyframes */
+      @keyframes seqPhase1 {
+        0%, 100% { opacity: 1; }
+      }
+      @keyframes seqPhase2 {
+        0%, 12% { opacity: 0; transform: translateY(4px); }
+        16%, 95% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; }
+      }
+      @keyframes seqPhase3 {
+        0%, 28% { opacity: 0; transform: translateY(4px); }
+        32%, 95% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; }
+      }
+      @keyframes seqPhase4 {
+        0%, 46% { opacity: 0; transform: translateY(4px); }
+        50%, 95% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; }
+      }
+      @keyframes seqPhase5 {
+        0%, 64% { opacity: 0; transform: translateY(4px); }
+        68%, 95% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; }
+      }
+      @keyframes seqMeter {
+        0%, 66% { width: 0; }
+        74%, 95% { width: 332px; }
+        100% { width: 0; }
+      }
+      @keyframes cursorBlink {
+        0%, 49% { opacity: 1; }
+        50%, 100% { opacity: 0; }
+      }
+      @keyframes scanPulse {
+        0%, 100% { opacity: 0.2; }
+        50% { opacity: 0.8; }
+      }
+
+      .anim-cmd { animation: seqPhase1 14s infinite ease-in-out; }
+      .anim-init { animation: seqPhase2 14s infinite ease-in-out; }
+      .anim-target { animation: seqPhase3 14s infinite ease-in-out; }
+      .anim-findings { animation: seqPhase4 14s infinite ease-in-out; }
+      .anim-score { animation: seqPhase5 14s infinite ease-in-out; }
+      .anim-meter { animation: seqMeter 14s infinite cubic-bezier(0.16, 1, 0.3, 1); }
+      .cursor { animation: cursorBlink 0.9s infinite; }
+      .radar-pulse { animation: scanPulse 2.5s infinite ease-in-out; }
+    </style>
+  </defs>
+
+  <!-- Window Container -->
+  <rect x="10" y="10" width="920" height="540" rx="12" fill="url(#bg-grad)" stroke="#1e2c47" stroke-width="2" />
+
+  <!-- Window Titlebar -->
+  <path d="M 10 22 C 10 15 15 10 22 10 L 918 10 C 925 10 930 15 930 22 L 930 46 L 10 46 Z" fill="url(#titlebar-grad)" stroke="#1e2c47" stroke-width="1" />
+  
+  <!-- Terminal Window Controls -->
+  <circle cx="34" cy="28" r="6" fill="#ff5f56" />
+  <circle cx="54" cy="28" r="6" fill="#ffbd2e" />
+  <circle cx="74" cy="28" r="6" fill="#27c93f" />
+
+  <!-- Window Title -->
+  <text x="470" y="32" text-anchor="middle" font-size="12" fill="#718096" font-weight="600">threatlens-security-suite ~ v1.0.0 [Sentinel] — 920x540</text>
+  <rect x="830" y="21" width="84" height="15" rx="3" fill="#00d4ff15" stroke="#00d4ff40" stroke-width="1" />
+  <text x="872" y="32" text-anchor="middle" font-size="9" fill="#00d4ff" font-weight="700">ZERO-FP CORE</text>
+
+  <!-- Interactive Terminal Content -->
+  <g transform="translate(30, 70)">
+
+    <!-- Command Prompt -->
+    <g class="anim-cmd">
+      <text x="0" y="16" font-size="13" class="t-cyan">secops@threatlens-core</text>
+      <text x="178" y="16" font-size="13" class="t-dim">:</text>
+      <text x="190" y="16" font-size="13" class="t-purple">~/samples</text>
+      <text x="268" y="16" font-size="13" class="t-white">$ python threatlens.py --file banking_trojan.apk</text>
+    </g>
+
+    <!-- Phase 2: Engine Initialization Banner -->
+    <g class="anim-init">
+      <!-- Mini ASCII Header & Telemetry -->
+      <text x="0" y="44" font-size="11" class="t-cyan">[*] THREATLENS STATIC ANALYSIS ENGINE v1.0.0 [CODENAME: SENTINEL]</text>
+      <text x="0" y="62" font-size="11" class="t-green">[OK] Disassembly pipeline mounted (AXML / DEX / Libs / PE)</text>
+      <text x="450" y="62" font-size="11" class="t-green">[OK] 15+ Advanced YARA rule engines active</text>
+      <text x="0" y="78" font-size="11" class="t-green">[OK] Autonomous learning database online (offline cache)</text>
+      <text x="450" y="78" font-size="11" class="t-green">[OK] Zero-FP network heuristic pipeline initialized</text>
+      <line x1="0" y1="92" x2="880" y2="92" stroke="#1c2940" stroke-width="1" />
+    </g>
+
+    <!-- Phase 3: Target Specification Panel -->
+    <g class="anim-target">
+      <rect x="0" y="104" width="880" height="54" rx="6" fill="#10192b" stroke="#1d2e4a" stroke-width="1" />
+      <text x="16" y="125" font-size="11" class="t-dim">TARGET FILE:</text>
+      <text x="110" y="125" font-size="11" class="t-white">com.malware.bankbot.apk</text>
+      <text x="360" y="125" font-size="11" class="t-dim">PAYLOAD SIZE:</text>
+      <text x="460" y="125" font-size="11" class="t-white">4.82 MB (5,054,120 bytes)</text>
+      <text x="700" y="125" font-size="11" class="t-dim">ARCH:</text>
+      <text x="746" y="125" font-size="11" class="t-cyan">Android APK</text>
+      
+      <text x="16" y="145" font-size="10" class="t-dim">SHA-256:</text>
+      <text x="82" y="145" font-size="10" class="t-yellow">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</text>
+    </g>
+
+    <!-- Phase 4: Forensics Findings -->
+    <g class="anim-findings">
+      <!-- Findings Row 1: Dangerous Combinations -->
+      <rect x="0" y="170" width="430" height="98" rx="6" fill="#121a2c" stroke="#253553" stroke-width="1" />
+      <text x="14" y="190" font-size="11" class="t-red">[!!] DANGEROUS PERMISSION COMBINATION</text>
+      <text x="14" y="210" font-size="10" class="t-white">Pattern: SMS Interception &amp; Covert Banking Exfiltration</text>
+      <text x="14" y="228" font-size="10" class="t-dim">Perms: SEND_SMS, RECEIVE_SMS, READ_PHONE_STATE, SYSTEM_ALERT_WINDOW</text>
+      <text x="14" y="248" font-size="10" class="t-orange">Risk Vector: Intercepts 2FA OTP codes &amp; draws fake banking overlays</text>
+
+      <!-- Findings Row 2: Deep Heuristics & Anti-Analysis -->
+      <rect x="450" y="170" width="430" height="98" rx="6" fill="#121a2c" stroke="#253553" stroke-width="1" />
+      <text x="464" y="190" font-size="11" class="t-orange">[!] DEEP HEURISTICS &amp; EVASION DETECTED</text>
+      <text x="464" y="210" font-size="10" class="t-white">Anti-VM: Checks for QEMU, Goldfish, Genymotion virtual pipes</text>
+      <text x="464" y="228" font-size="10" class="t-white">Anti-Debug: android.os.Debug.isDebuggerConnected() hook detected</text>
+      <text x="464" y="248" font-size="10" class="t-red">Root Check: /system/xbin/su query + Frida server probe [CRITICAL]</text>
+
+      <!-- Network Indicators Panel -->
+      <rect x="0" y="278" width="880" height="54" rx="6" fill="#121a2c" stroke="#ff174430" stroke-width="1" />
+      <text x="14" y="298" font-size="11" class="t-red">[NET-IOC] EXTRACTED C2 NETWORK INDICATORS (ZERO-FP PIPELINE)</text>
+      <text x="14" y="318" font-size="10" class="t-white">C2 IP: <tspan class="t-red">185.220.101.5:8080</tspan> [TOR Exit / RAT Port] (Conf: 96%)</text>
+      <text x="430" y="318" font-size="10" class="t-white">C2 URL: <tspan class="t-red">hxxp://telemetry-update.darknet/gate.php</tspan> (Conf: 92%)</text>
+    </g>
+
+    <!-- Phase 5: Threat Assessment Matrix & Meter -->
+    <g class="anim-score">
+      <rect x="0" y="342" width="880" height="116" rx="8" fill="#140f1a" stroke="#ff1744" stroke-width="1.5" />
+      <rect x="0" y="342" width="880" height="24" rx="8" fill="#ff174420" />
+      <text x="440" y="358" text-anchor="middle" font-size="11" class="t-red" font-weight="700">=== THREAT ASSESSMENT MATRIX ===</text>
+
+      <text x="20" y="390" font-size="12" class="t-white">COMPOSITE THREAT SCORE: <tspan class="t-red" font-size="15">92 / 100</tspan></text>
+      <rect x="340" y="376" width="140" height="20" rx="4" fill="#ff174430" stroke="#ff1744" stroke-width="1" />
+      <text x="410" y="390" text-anchor="middle" font-size="11" class="t-red" font-weight="700">[ CRITICAL THREAT ]</text>
+
+      <!-- Animated Progress Gauge -->
+      <text x="20" y="420" font-size="11" class="t-dim">[</text>
+      <!-- Gauge Background -->
+      <rect x="30" y="410" width="360" height="12" rx="3" fill="#222b3d" />
+      <!-- Gauge Filled Animated -->
+      <rect x="30" y="410" width="0" height="12" rx="3" fill="url(#meter-fill)" class="anim-meter" />
+      <text x="400" y="421" font-size="11" class="t-dim">]  92%</text>
+
+      <!-- Score Breakdown Summary -->
+      <text x="500" y="390" font-size="10" class="t-white">Breakdown: <tspan class="t-red">Perms: +30</tspan> | <tspan class="t-red">Network C2: +28</tspan> | <tspan class="t-red">Evasion: +25</tspan> | <tspan class="t-yellow">Combos: +9</tspan></text>
+      <text x="500" y="412" font-size="10" class="t-green">[OK] Learning Engine: Automatically committed +2 IOCs to local offline database</text>
+      <text x="500" y="432" font-size="10" class="t-cyan">[OK] JSON Telemetry Report saved to ./reports/threatlens_bankbot_2026.json</text>
+    </g>
+
+    <!-- Blinking Cursor Terminal Prompt -->
+    <g transform="translate(0, 474)">
+      <text x="0" y="0" font-size="12" class="t-cyan">secops@threatlens-core</text>
+      <text x="170" y="0" font-size="12" class="t-dim">:</text>
+      <text x="182" y="0" font-size="12" class="t-purple">~/samples</text>
+      <text x="260" y="0" font-size="12" class="t-white">$</text>
+      <rect x="274" y="-11" width="8" height="14" fill="#00d4ff" class="cursor" />
+    </g>
+
+  </g>
+</svg>
