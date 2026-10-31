@@ -6,38 +6,38 @@
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-green)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
 
-## ✨ Features
+## Features
 
-### 🧠 Auto-Training Learning Engine (NEW)
+### Auto-Training Learning Engine (NEW)
 - **Autonomous Evolution** — ThreatLens learns from every scan. If VirusTotal flags a file, ThreatLens automatically extracts its Hash and C2 indicators to its local database.
 *   **Offline Detection** — After learning, ThreatLens can detect known threats 100% offline without needing any API calls.
 *   **Custom Intel Import** — Inject your own threat intelligence (Hashes, IPs, URLs) using the `--import-intel` command.
 
-### 🔍 Deep Heuristics & Evasion Detection (NEW)
+### Deep Heuristics & Evasion Detection (NEW)
 *   **Anti-VM & Anti-Emulator** — Detects checks for QEMU, Goldfish, Genymotion, and VirtualBox.
 *   **Anti-Debugging** — Identifies code meant to detect security researchers' debuggers.
 *   **Root/Jailbreak Detection** — Scans for `su` binaries, `Superuser.apk`, and hooking frameworks like **Frida** or **Xposed**.
 *   **Advanced Packer Detection** — Identifies enterprise-grade obfuscators like **DexGuard**, **Bangcle**, **SecNeo**, and **Tencent Sec**.
 
-### 📱 APK Analysis
+### APK Analysis
 - **AndroidManifest.xml** — Full manifest parsing with package info, SDK versions, component extraction.
 - **Permission Auditing** — 24+ dangerous permissions scored with risk levels and malicious use cases.
 - **Permission Combinations** — Detects 7 dangerous permission combos (Banking Trojan, Spyware, etc.).
 - **DEX Analysis** — String extraction, suspicious API detection, and deep code heuristics.
 - **Network Scanning** — Scans `.arsc` resources and `.so` libraries for hidden Firebase/C2 URLs.
 
-### 💻 EXE/PE Analysis
+### EXE/PE Analysis
 - **PE Header Analysis** — Entry point, compile timestamps, and security features (ASLR/DEP).
 - **Import Analysis** — 80+ suspicious Windows APIs categorized by attack technique.
 - **Import Combinations** — MITRE ATT&CK mapped technique detection (8 patterns).
 - **Packer Detection** — UPX, Themida, VMProtect, and many others.
 
-### 🌐 Network Indicator Extraction
+### Network Indicator Extraction
 - **5-Stage Zero-FP Pipeline** — Zero false-positive detection for IPs, Domains, and URLs.
 - **Port Detection** — Context-aware detection of RAT command ports.
 - **Base64 Decoding** — Automatically decodes obfuscated indicators.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
@@ -73,7 +73,7 @@ python threatlens.py --import-intel my_iocs.json
 python threatlens.py --batch ./samples/
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 tool/
@@ -93,11 +93,11 @@ tool/
 └── config.json               # API configurations
 ```
 
-## ⚖️ Disclaimer
+##  Disclaimer
 
 This tool is designed for **authorized security analysis only**. Unauthorized use against systems you do not own is illegal and unethical.
 
-## 📝 License
+##  License
 
 MIT License — see [LICENSE](LICENSE) for details.
 
