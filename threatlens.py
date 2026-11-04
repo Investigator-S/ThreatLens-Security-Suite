@@ -246,6 +246,13 @@ def run_analysis(file_path, output_format="both", is_interactive=False):
         status.update("[bold cyan]Querying VirusTotal Intelligence...")
         vt_result = lookup_hash(file_info["hashes"]["sha256"])
         results["virustotal"] = vt_result
+
+        # Extracted Remote IP & C2 Infrastructure Intelligence
+        if results.get("network"):
+            status.update("[bold blue]Profiling Extracted C2 / Remote IP Infrastructure...")
+            from core.ip_analyzer import analyze_extracted_ips
+            ip_intel = analyze_extracted_ips(results["network"])
+            results["ip_intelligence"] = ip_intel
             
         # Train Learning Engine
         if learning_engine.learn_from_scan(results, vt_result):
@@ -261,6 +268,22 @@ def run_analysis(file_path, output_format="both", is_interactive=False):
 
     # === DISPLAY RESULTS ===
     display_threat_score(console, score, breakdown)
+
+    # Check for Zero-Day / FUD Evasion discrepancy
+    if scorer.is_zero_day_evasion(results):
+        console.print()
+        console.print(Panel(
+            "  [bold red][!] ZERO-DAY / FUD EVASION ADVISORY[/]\n\n"
+            "  [bold white]This binary exhibits critical malicious capabilities and evasion techniques[/]\n"
+            "  [bold white]despite having ZERO detections on VirusTotal. Novel / targeted malware[/]\n"
+            "  [bold white]frequently bypasses hash-based scanners on Day 0 through custom stagers & packers.[/]\n"
+            "  [bold yellow]ThreatLens Verdict:[/] [bold red]TREAT AS HIGH-RISK UNTRUSTED SAMPLE (MITRE ATT&CK MAPPED)[/]",
+            box=box.ROUNDED,
+            border_style="bold red",
+            title="[bold red] ZERO-DAY ANOMALY DETECTED [/]",
+            title_align="center"
+        ))
+
     _display_analysis_results(results, file_type)
 
     # === SUMMARY TABLE ===
@@ -427,14 +450,31 @@ def _display_analysis_results(results, file_type):
             console.print(f"       [dim]Value:[/] {hit['value']}")
             console.print()
 
-    # VirusTotal table
+    # VirusTotal Threat Intelligence
     vt = results.get("virustotal", {})
     if vt and vt.get("status") == "found":
         console.print()
         vt_table = create_virustotal_table(vt)
         if vt_table:
             console.print(vt_table)
+
+        # Supplementary Threat Context
+        if vt.get("threat_label"):
+            console.print(f"    [bold red]VT Suggested Classification:[/] [bold white]{vt['threat_label']}[/]")
+        if vt.get("tags"):
+            console.print(f"    [dim]VT Community Tags:[/] [dim cyan]{', '.join(vt['tags'][:8])}[/]")
+        if vt.get("permalink"):
             console.print(f"    [dim]Permalink:[/] [cyan underline]{vt.get('permalink')}[/]")
+    elif vt and vt.get("status") == "not_found":
+        console.print()
+        display_section_header(console, "VIRUSTOTAL THREAT INTELLIGENCE", ICONS["globe"])
+        console.print(f"    [dim]{ICONS['info']} Sample hash was not found in VirusTotal database (New / Uncatalogued Sample)[/]")
+        if vt.get("permalink"):
+            console.print(f"    [dim]Permalink:[/] [cyan underline]{vt.get('permalink')}[/]")
+    elif vt and vt.get("status") == "error":
+        console.print()
+        display_section_header(console, "VIRUSTOTAL THREAT INTELLIGENCE", ICONS["globe"])
+        console.print(f"    [yellow]{ICONS['warning']} VirusTotal query unavailable: {vt.get('reason')}[/]")
 
     # Network indicators table
     network = results.get("network", [])
@@ -444,6 +484,15 @@ def _display_analysis_results(results, file_type):
     else:
         display_section_header(console, "NETWORK INDICATORS", ICONS["globe"])
         console.print(f"    [green]{ICONS['check']} No suspicious network indicators detected[/]")
+
+    # Extracted Remote C2 & IP Infrastructure Intelligence
+    ip_intel = results.get("ip_intelligence", [])
+    if ip_intel:
+        from ui.tables import create_ip_intelligence_table
+        ip_tbl = create_ip_intelligence_table(ip_intel)
+        if ip_tbl:
+            console.print()
+            console.print(ip_tbl)
 
     # YARA matches
     yara = results.get("yara", [])
@@ -604,7 +653,7 @@ def show_settings():
 
     # Threat Intelligence Integrations
     console.print(f"\n    [bold cyan]Intelligence Engine Feeds[/]")
-    from core.virustotal import load_api_key
+    from core.virustotal import load_api_key, test_api_key
     vt_key = load_api_key()
     if vt_key:
         masked = vt_key[:4] + "*" * max(0, len(vt_key) - 8) + vt_key[-4:] if len(vt_key) > 8 else "***"
@@ -636,7 +685,16 @@ def show_settings():
             box=box.ROUNDED,
         ))
 
-    console.input("\n  [dim]Press Enter to continue...[/]")
+    console.print()
+    action = console.input("  [cyan]Options:[/] [white][T]est VirusTotal Connection[/]  |  [dim][Enter] Return to Menu: [/]").strip().lower()
+    if action == "t":
+        with console.status("  [bold cyan]Testing VirusTotal v3 API ping...[/]", spinner="dots"):
+            t_res = test_api_key()
+        if t_res.get("success"):
+            console.print(f"  [bold green]{ICONS['check']} VirusTotal Online:[/] {t_res.get('message')}")
+        else:
+            console.print(f"  [bold red]{ICONS['cross']} VirusTotal Error:[/] {t_res.get('message')}")
+        console.input("\n  [dim]Press Enter to return to menu...[/]")
 
 
 if __name__ == "__main__":

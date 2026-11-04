@@ -70,6 +70,25 @@ Extracted strings pass through five strict validation layers to eliminate false 
 4. **Context-Aware Port Triangulation**: Correlation of IP endpoints with typical Remote Access Trojan (RAT) ports (e.g., 8080, 4444, 1337, 8888, 5552).
 5. **Base64 Payload Deobfuscation**: Recursive decoding of obfuscated payloads concealing network indicators.
 
+### 6. Remote C2 & IP Infrastructure Intelligence
+Extracted public IPv4 addresses are profiled in real time:
+* **Reverse DNS Attribution**: Queries PTR records to resolve hostnames, dynamic DNS domains, and C2 servers.
+* **VirusTotal IP Intelligence**: Queries live multi-engine reputation across 90+ security vendors for each extracted IP.
+* **Autonomous System & GeoIP**: Identifies the hosting organization (AS Owner), ASN, and country of origin.
+* **Adversary Port Fingerprinting**: Flags specialized RAT ports (Metasploit `4444`, Elite RAT `1337`, ADB botnet `5555`, C2 Gate `8888`).
+* **Cross-Correlation Scoring**: If an extracted IP is flagged as malicious on global feeds, ThreatLens elevates the sample's threat score even if the sample's file hash is completely new and unseen.
+
+### 7. Zero-Day & FUD Malware Detection Engine
+Adversaries frequently recompile, pack, or crypt malware to generate novel hashes with 0 detections on VirusTotal. ThreatLens neutralizes this blind spot:
+* **Behavioral Discrepancy Detection**: ThreatLens decouples detection from hash lookups. Even when VirusTotal returns `0/70` or `not_found`, ThreatLens evaluates functional API combinations, permission chains, and section entropy.
+* **Zero-Day Anomaly Advisory**: When ThreatLens identifies high-confidence malicious capabilities alongside 0 VirusTotal detections, it issues an immediate **ZERO-DAY ANOMALY DETECTED** alert warning analysts not to trust the clean hash status.
+
+### 8. Self-Training Autonomous Learning Engine
+ThreatLens implements a continuous learning feedback loop:
+* **Autonomous Knowledge Vault Feedback**: When ThreatLens analyzes an untrusted sample and confirms high-confidence maliciousness (via multi-engine consensus or lethal MITRE combinations), `learning_engine.py` automatically extracts malicious SHA-256 hashes, C2 IP addresses, domains, and gate URLs.
+* **Offline Knowledge Vault**: Harvested indicators are committed locally to `signatures/local_threat_intel.json`. Future appearances of this infrastructure are flagged immediately in air-gapped environments without external network queries.
+* **Feature Vector Classification**: Analyzes structural feature vectors (section entropy distribution, import function hashes / Imphash, permission clustering) to score malware families autonomously.
+
 ---
 
 ## MITRE ATT&CK Mapping Matrix
@@ -260,6 +279,7 @@ ThreatLens-Security-Suite/
 |   |-- entropy_analyzer.py          # Shannon entropy & section cryptanalysis
 |   |-- exe_analyzer.py              # Portable Executable (PE/COFF) structural parser
 |   |-- heuristics.py                # Anti-VM, Anti-Debug, and Obfuscation signatures
+|   |-- ip_analyzer.py               # C2 infrastructure attribution & VirusTotal IP profiler
 |   |-- learning_engine.py           # Autonomous offline learning & IOC repository
 |   |-- network_extractor.py         # 5-Stage Zero-FP C2 network extraction pipeline
 |   |-- report_generator.py          # Telemetry JSON serializer and report writer
@@ -279,7 +299,10 @@ ThreatLens-Security-Suite/
 |   |-- hash_calculator.py           # MD5, SHA-1, SHA-256 fingerprint calculations
 |   |-- platform_utils.py            # Windows/Linux terminal compatibility helpers
 |   `-- validators.py                # Magic byte identification & path sanitization
-|-- config.json                      # System configuration & API credential storage
+|-- .gitignore                       # Repository ignore rules (protects API keys & logs)
+|-- config.example.json              # Public configuration template (commit to Git)
+|-- config.local.json                # Private API key storage (git-ignored)
+|-- config.json                      # System configuration & fallback
 |-- requirements.txt                 # Python package dependencies
 |-- setup.py                         # Standard package installer
 `-- threatlens.py                    # Unified entrypoint (CLI & Interactive mode)

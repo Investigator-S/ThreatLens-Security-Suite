@@ -178,10 +178,35 @@ def create_virustotal_table(vt_result):
 
     detection_count = vt_result.get("detection_count", 0)
     total = vt_result.get("total_engines", 0)
+    detections = vt_result.get("detections", [])
 
+    # Clean / Benign Sample Consensus
+    if detection_count == 0:
+        table = Table(
+            title=f"  [VIRUSTOTAL] Multi-Engine Threat Intelligence (0/{total} Flagged — Verified Clean)",
+            box=box.ROUNDED, border_style="bold green", title_style="bold green",
+            show_lines=True, padding=(0, 1),
+        )
+        table.add_column("Status", style="bold green", justify="center", width=12)
+        table.add_column("Consensus Details", style="bold white", min_width=35)
+        table.add_column("Community Reputation", style="dim cyan", min_width=25)
+        table.add_column("Verdict", justify="center", width=14)
+
+        rep = vt_result.get("file_info", {}).get("reputation", 0)
+        rep_text = f"+{rep}" if rep > 0 else str(rep)
+        table.add_row(
+            "[OK] CLEAN",
+            f"0 of {total} commercial security engines detected malicious signatures",
+            f"Global VT Reputation Score: {rep_text}",
+            Text("BENIGN", style="bold green")
+        )
+        return table
+
+    # Flagged Sample Table
+    border_col = "bold red" if detection_count >= 5 else "bold yellow"
     table = Table(
         title=f"  [VIRUSTOTAL] Multi-Engine Threat Intelligence ({detection_count}/{total} Flagged)",
-        box=box.ROUNDED, border_style="magenta", title_style="bold magenta",
+        box=box.ROUNDED, border_style=border_col, title_style=border_col,
         show_lines=True, padding=(0, 1),
     )
     table.add_column("#", style="dim", width=4, justify="center")
@@ -189,7 +214,6 @@ def create_virustotal_table(vt_result):
     table.add_column("Malware Classification", style="bold red", min_width=30)
     table.add_column("Verdict", justify="center", width=14)
 
-    detections = vt_result.get("detections", [])
     for i, det in enumerate(detections[:25], 1):
         cat = det.get("category", "")
         cat_style = "bold red" if cat == "malicious" else "bold yellow"
@@ -217,4 +241,61 @@ def create_heuristics_table(heuristics_data):
         style = get_severity_style(sev)
         sev_text = Text(sev, style=style)
         table.add_row(str(i), h.get("category", ""), h.get("description", ""), h.get("file", ""), sev_text)
+    return table
+
+
+def create_ip_intelligence_table(ip_intel_list):
+    """Create a formatted table for Extracted C2 & IP Infrastructure Intelligence."""
+    if not ip_intel_list:
+        return None
+
+    table = Table(
+        title=f"  [INFRASTRUCTURE] Extracted Remote C2 & IP Intelligence ({len(ip_intel_list)} Hosts)",
+        box=box.ROUNDED, border_style="bold red", title_style="bold red",
+        show_lines=True, padding=(0, 1),
+    )
+    table.add_column("Remote IP:Port", style="bold white", min_width=20)
+    table.add_column("Geo", style="cyan", width=8, justify="center")
+    table.add_column("ISP / AS Organization", style="dim white", min_width=24)
+    table.add_column("Reverse DNS / Hostname", style="dim cyan", min_width=24)
+    table.add_column("VT Flags", style="bold red", justify="center", width=12)
+    table.add_column("Verdict", justify="center", width=16)
+
+    for item in ip_intel_list:
+        ip = item.get("ip", "")
+        port = item.get("port")
+        ip_display = f"{ip}:{port}" if port else ip
+        if item.get("port_tag"):
+            ip_display += f" [{item['port_tag']}]"
+
+        country = item.get("country", "??")
+        as_owner = item.get("as_owner", "Unknown")
+        rdns = item.get("reverse_dns", "None")
+        det_rate = item.get("detection_rate", "0/0")
+        
+        mal = item.get("malicious_count", 0)
+        tags = item.get("tags", [])
+        
+        if mal >= 5 or "c2" in tags:
+            verdict_style = "bold red"
+            verdict_text = "CONFIRMED C2"
+        elif mal >= 2 or "tor" in tags:
+            verdict_style = "bold yellow"
+            verdict_text = "TOR / SUSPICIOUS"
+        elif mal == 1:
+            verdict_style = "yellow"
+            verdict_text = "QUESTIONABLE"
+        else:
+            verdict_style = "bold green"
+            verdict_text = "CLEAN HOST"
+
+        table.add_row(
+            ip_display,
+            country,
+            as_owner[:28],
+            rdns[:28],
+            det_rate,
+            Text(verdict_text, style=verdict_style)
+        )
+
     return table

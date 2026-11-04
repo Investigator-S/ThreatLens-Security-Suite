@@ -120,6 +120,13 @@ class ThreatScorer:
             vt_score = get_vt_score_contribution(vt)
             self.breakdown["VirusTotal"] = min(vt_score, self.CATEGORY_CAPS["virustotal"])
 
+        # Score IP Infrastructure Intelligence (C2 Hosts)
+        ip_intel = analysis_results.get("ip_intelligence", [])
+        if ip_intel:
+            ip_scores = [ip.get("score_contribution", 0) for ip in ip_intel]
+            if ip_scores:
+                self.breakdown["C2 Infrastructure"] = min(max(ip_scores), self.CATEGORY_CAPS["network_indicators"])
+
         # Score Local Intel
         local_intel = analysis_results.get("local_intel", [])
         if local_intel:
@@ -242,14 +249,23 @@ class ThreatScorer:
             vt_score = get_vt_score_contribution(vt)
             self.breakdown["VirusTotal"] = min(vt_score, self.CATEGORY_CAPS["virustotal"])
 
-        # 9. Score Local Intel
+        # 9. Score IP Infrastructure Intelligence (C2 Hosts)
+        ip_intel = analysis_results.get("ip_intelligence", [])
+        ip_c2_score = 0
+        if ip_intel:
+            ip_scores = [ip.get("score_contribution", 0) for ip in ip_intel]
+            if ip_scores:
+                ip_c2_score = min(max(ip_scores), self.CATEGORY_CAPS["network_indicators"])
+                self.breakdown["C2 Infrastructure"] = ip_c2_score
+
+        # 10. Score Local Intel
         local_intel = analysis_results.get("local_intel", [])
         if local_intel:
             intel_score = min(len(local_intel) * 20, self.CATEGORY_CAPS["local_intel"])
             self.breakdown["Local Intel Matches"] = intel_score
 
         # Check for confirmed critical malicious indicators
-        has_critical_indicators = (yara_score >= 12 or len(combos) > 0 or len(local_intel) > 0 or vt_score >= 15)
+        has_critical_indicators = (yara_score >= 12 or len(combos) > 0 or len(local_intel) > 0 or vt_score >= 15 or ip_c2_score >= 15)
 
         # Authenticode Trust Damping:
         # Verified Microsoft Windows system binaries are trusted OS components.
@@ -283,3 +299,16 @@ class ThreatScorer:
         elif score >= 20:
             return "LOW"
         return "CLEAN"
+
+    def is_zero_day_evasion(self, analysis_results):
+        """
+        Detect if sample exhibits significant malicious indicators (heuristic score >= 40)
+        while having 0 detections or being uncatalogued on VirusTotal.
+        """
+        vt = analysis_results.get("virustotal", {})
+        vt_malicious = vt.get("detection_count", 0) if vt and vt.get("status") == "found" else 0
+        
+        # ThreatLens static triage found high/critical risk, but VT is clean/unseen
+        if self.total_score >= 40 and vt_malicious == 0:
+            return True
+        return False

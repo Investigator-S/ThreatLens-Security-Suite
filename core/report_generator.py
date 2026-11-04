@@ -128,6 +128,25 @@ def generate_summary(analysis_results, file_type):
         "highest_risk": "MEDIUM" if strings else "CLEAN",
     }
 
+    # VirusTotal consensus in summary table
+    vt = analysis_results.get("virustotal", {})
+    if vt and vt.get("status") == "found":
+        det_cnt = vt.get("detection_count", 0)
+        tot_cnt = vt.get("total_engines", 0)
+        summary["VirusTotal Engines"] = {
+            "count": f"{det_cnt}/{tot_cnt}",
+            "highest_risk": vt.get("severity", "CLEAN"),
+        }
+
+    # Extracted C2 Infrastructure
+    ip_intel = analysis_results.get("ip_intelligence", [])
+    if ip_intel:
+        c2_count = sum(1 for ip in ip_intel if ip.get("malicious_count", 0) >= 2)
+        summary["C2 Infrastructure"] = {
+            "count": len(ip_intel),
+            "highest_risk": "CRITICAL" if c2_count > 0 else "MEDIUM",
+        }
+
     return summary
 
 
