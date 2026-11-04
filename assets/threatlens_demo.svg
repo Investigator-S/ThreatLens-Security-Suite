@@ -65,7 +65,7 @@
       }
       @keyframes seqMeter {
         0%, 66% { width: 0; }
-        74%, 95% { width: 310px; }
+        74%, 95% { width: 285px; }
         100% { width: 0; }
       }
       @keyframes cursorBlink {
@@ -102,13 +102,9 @@
   <!-- Interactive Terminal Content -->
   <g transform="translate(30, 68)">
 
-    <!-- The ONE and ONLY Command Prompt line -->
+    <!-- Command Prompt line -->
     <g class="anim-cmd">
-      <text x="0" y="16" font-size="13" class="t-cyan">secops@threatlens-core</text>
-      <text x="178" y="16" font-size="13" class="t-dim">:</text>
-      <text x="190" y="16" font-size="13" class="t-purple">~/samples</text>
-      <text x="268" y="16" font-size="13" class="t-white">$ python threatlens.py --file banking_trojan.apk</text>
-      <rect x="670" y="5" width="8" height="14" fill="#00d4ff" class="cursor" />
+      <text x="0" y="16" font-size="13"><tspan class="t-cyan">secops@threatlens-core</tspan><tspan class="t-dim">:</tspan><tspan class="t-purple">~/samples</tspan><tspan class="t-white">$ python threatlens.py --file banking_trojan.apk</tspan><tspan dx="2" fill="#00d4ff" class="cursor">&#x2588;</tspan></text>
     </g>
 
     <!-- Phase 2: Engine Initialization Banner -->
