@@ -44,23 +44,23 @@
         0%, 100% { opacity: 1; }
       }
       @keyframes seqPhase2 {
-        0%, 12% { opacity: 0; transform: translateY(4px); }
-        16%, 95% { opacity: 1; transform: translateY(0); }
+        0%, 12% { opacity: 0; }
+        16%, 95% { opacity: 1; }
         100% { opacity: 0; }
       }
       @keyframes seqPhase3 {
-        0%, 28% { opacity: 0; transform: translateY(4px); }
-        32%, 95% { opacity: 1; transform: translateY(0); }
+        0%, 28% { opacity: 0; }
+        32%, 95% { opacity: 1; }
         100% { opacity: 0; }
       }
       @keyframes seqPhase4 {
-        0%, 46% { opacity: 0; transform: translateY(4px); }
-        50%, 95% { opacity: 1; transform: translateY(0); }
+        0%, 46% { opacity: 0; }
+        50%, 95% { opacity: 1; }
         100% { opacity: 0; }
       }
       @keyframes seqPhase5 {
-        0%, 64% { opacity: 0; transform: translateY(4px); }
-        68%, 95% { opacity: 1; transform: translateY(0); }
+        0%, 64% { opacity: 0; }
+        68%, 95% { opacity: 1; }
         100% { opacity: 0; }
       }
       @keyframes seqMeter {
@@ -69,8 +69,8 @@
         100% { width: 0; }
       }
       @keyframes seqPhasePrompt {
-        0%, 78% { opacity: 0; transform: translateY(4px); }
-        82%, 95% { opacity: 1; transform: translateY(0); }
+        0%, 78% { opacity: 0; }
+        82%, 95% { opacity: 1; }
         100% { opacity: 0; }
       }
       @keyframes cursorBlink {
@@ -192,13 +192,13 @@
       <text x="452" y="421" font-size="9.5" class="t-orange">[OK] Static Triage Verdict: MALICIOUS (Action: QUARANTINE)</text>
     </g>
 
-    <!-- Phase 6: Scan Complete - Returning Shell Prompt (Only visible after scan finishes) -->
-    <g class="anim-prompt" transform="translate(0, 466)">
-      <text x="0" y="0" font-size="13" class="t-cyan">secops@threatlens-core</text>
-      <text x="178" y="0" font-size="13" class="t-dim">:</text>
-      <text x="190" y="0" font-size="13" class="t-purple">~/samples</text>
-      <text x="268" y="0" font-size="13" class="t-white">$</text>
-      <rect x="282" y="-11" width="8" height="14" fill="#00d4ff" class="cursor" />
+    <!-- Phase 6: Scan Complete - Returning Shell Prompt at Bottom -->
+    <g class="anim-prompt">
+      <text x="0" y="466" font-size="13" class="t-cyan">secops@threatlens-core</text>
+      <text x="178" y="466" font-size="13" class="t-dim">:</text>
+      <text x="190" y="466" font-size="13" class="t-purple">~/samples</text>
+      <text x="268" y="466" font-size="13" class="t-white">$</text>
+      <rect x="282" y="455" width="8" height="14" fill="#00d4ff" class="cursor" />
     </g>
 
   </g>
